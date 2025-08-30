@@ -237,7 +237,6 @@
         
         <div class="mt-8">
             <p>Aktuální hlasitost: <span id="volume-display">500</span>%</p>
-            <button id="increase-volume-btn" class="btn btn-secondary mt-4">Zvýšit hlasitost</button>
         </div>
     </div>
 
@@ -299,7 +298,6 @@
         const optionsContainer = document.getElementById('options-container');
         const resultMessage = document.getElementById('result-message');
         const body = document.body;
-        const increaseVolumeBtn = document.getElementById('increase-volume-btn');
 
         // Modální okno
         const jebaitedModal = document.getElementById('jebaited-modal');
@@ -514,14 +512,6 @@
             showQuestion();
         });
         
-        // Událost pro tlačítko "Zvýšit hlasitost"
-        increaseVolumeBtn.addEventListener('click', () => {
-            currentVolume = Math.min(initialVolume, currentVolume + 100);
-            gameSong.volume = Math.min(1.0, currentVolume / 100);
-            updateDisplay();
-            resultMessage.textContent = "Hlasitost zvýšena.";
-        });
-
         // Událost pro kontejner s odpověďmi (event delegation)
         optionsContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('option-button') && !e.target.disabled) {
