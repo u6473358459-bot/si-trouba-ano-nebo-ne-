@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hra pro tebe 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(120deg, #ff0000, #ff8c00, #ffff00, #00ff00, #00ffff, #0000ff, #8a2be2);
+            background-size: 400% 400%;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            animation: rainbow-bg 15s ease infinite;
+            overflow: hidden;
+            position: relative;
+        }
+        @keyframes rainbow-bg {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .container {
+            background-color: #162447;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 700px;
+            position: relative;
+            z-index: 10;
+        }
+        h1 {
+            color: #e4e4e4;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #b0b0d0;
+        }
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: #e07a5f;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background-color: #d86d52;
+        }
+        .btn-secondary {
+            background-color: #55a630;
+            color: #fff;
+            margin-right: 1rem;
+        }
+        .btn-secondary:hover {
+            background-color: #4b942a;
+        }
+        .btn-danger {
+            background-color: #ef233c;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background-color: #d61c31;
+        }
+        .hidden {
+            display: none;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .option-button {
+            padding: 1rem;
+            font-size: 1.1rem;
+            border-radius: 0.75rem;
+            background-color: #334e68;
+            color: #e0e0e0;
+            transition: background-color 0.2s;
+            text-align: left;
+            border: none;
+            cursor: pointer;
+        }
+        .option-button:hover {
+            background-color: #4a6582;
+        }
+        .correct-answer {
+            background-color: #55a630 !important;
+            color: white;
+        }
+        .incorrect-answer {
+            background-color: #ef233c !important;
+            color: white;
+        }
+        .correct-answer-flash {
+            animation: correctFlash 0.5s ease-in-out;
+        }
+        @keyframes correctFlash {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(85, 166, 48, 0.7); }
+            100% { background-color: transparent; }
+        }
+        .falling-emoji {
+            position: absolute;
+            top: -10%;
+            font-size: 2rem;
+            opacity: 0.8;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+            animation-name: fall;
+        }
+        @keyframes fall {
+            from {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.8;
+            }
+            to {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding-top: 50px;
+        }
+        .modal-content {
+            background-color: #162447;
+            margin: 15% auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 1rem;
+            text-align: center;
+        }
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .modal-content p {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .modal-buttons .btn {
+            margin: 0 0.5rem;
+        }
+        .jebaited-emoji {
+            font-size: 6rem;
+            animation: bounce 0.5s infinite alternate;
+        }
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container" class="container">
+    <!-- Úvodní obrazovka -->
+    <div id="start-screen">
+        <h1>Vítej ve hře!</h1>
+        <p>Přeješ si hrát?</p>
+        <button id="start-button" class="btn btn-primary">Chci hrát</button>
+    </div>
+
+    <!-- Obrazovka pro výběr obtížnosti -->
+    <div id="difficulty-screen" class="hidden">
+        <h1>Vyber si obtížnost</h1>
+        <div class="flex justify-center space-x-4 mt-8">
+            <button id="easy-button" class="btn btn-secondary">Lehké</button>
+            <button id="medium-button" class="btn btn-secondary">Střední</button>
+            <button id="hard-button" class="btn btn-secondary">Těžké</button>
+        </div>
+    </div>
+
+    <!-- Hra - progresivní hlasitost -->
+    <div id="game-play" class="hidden">
+        <h1>Level <span id="level-display">1</span></h1>
+        
+        <div id="question-area" class="mt-8">
+            <p id="question-text" class="text-2xl font-bold"></p>
+            <div id="options-container" class="options-grid">
+                <!-- Tlačítka s odpověďmi budou vygenerována JS -->
+            </div>
+            <p id="result-message" class="result-message"></p>
+        </div>
+
+        <audio id="game-song" loop>
+            <source src="uploaded:Jebaited-Česká verze (original upload) [CJ1W-5P9xg0] (2).mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <div class="mt-8">
+            <p>Aktuální hlasitost: <span id="volume-display">500</span>%</p>
+            <button id="increase-volume-btn" class="btn btn-secondary mt-4">Zvýšit hlasitost</button>
+        </div>
+    </div>
+
+    <!-- Závěrečná obrazovka pro vítěze -->
+    <div id="end-screen-yes" class="hidden">
+        <h1>Gratuluji!</h1>
+        <p>Snížil jsi hlasitost až na 0% a vyhrál jsi! Děkujeme za hraní.</p>
+    </div>
+
+    <!-- Závěrečná obrazovka pro "ne" -->
+    <div id="end-screen-no" class="hidden">
+        <h1>Konec hry</h1>
+        <p>Ačkoliv jsi si myslel, že nejsi napálený, přesto jsi vypadl. Lepší štěstí příště!</p>
+    </div>
+</div>
+
+<!-- Modální okno "Jsi napálen?" -->
+<div id="jebaited-modal" class="modal">
+    <div class="modal-content">
+        <span id="jebaited-emoji" class="jebaited-emoji hidden">😂</span>
+        <h2>Jsi napálen?</h2>
+        <p>Hra je upravená tak, aby tě napálila. Jsi už napálený?</p>
+        <div class="modal-buttons">
+            <button id="yes-jebaited" class="btn btn-primary">Ano</button>
+            <button id="no-jebaited" class="btn btn-danger">Ne</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modální okno "Jsi vážně napálen?" -->
+<div id="really-jebaited-modal" class="modal">
+    <div class="modal-content">
+        <span id="really-jebaited-emoji" class="jebaited-emoji hidden">😈</span>
+        <h2>Jsi vážně napálen?</h2>
+        <p>Věřil jsi, že se ti to podaří. Ale jsi si jistý?</p>
+        <div class="modal-buttons">
+            <button id="yes-really-jebaited" class="btn btn-primary">Ano</button>
+            <button id="no-really-jebaited" class="btn btn-danger">Ne</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Získání elementů
+        const startScreen = document.getElementById('start-screen');
+        const difficultyScreen = document.getElementById('difficulty-screen');
+        const gamePlay = document.getElementById('game-play');
+        const endScreenYes = document.getElementById('end-screen-yes');
+        const endScreenNo = document.getElementById('end-screen-no');
+        const startButton = document.getElementById('start-button');
+        const easyButton = document.getElementById('easy-button');
+        const mediumButton = document.getElementById('medium-button');
+        const hardButton = document.getElementById('hard-button');
+        const gameSong = document.getElementById('game-song');
+        const levelDisplay = document.getElementById('level-display');
+        const volumeDisplay = document.getElementById('volume-display');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+        const body = document.body;
+        const increaseVolumeBtn = document.getElementById('increase-volume-btn');
+
+        // Modální okno
+        const jebaitedModal = document.getElementById('jebaited-modal');
+        const yesJebaitedBtn = document.getElementById('yes-jebaited');
+        const noJebaitedBtn = document.getElementById('no-jebaited');
+        const jebaitedEmoji = document.getElementById('jebaited-emoji');
+
+        const reallyJebaitedModal = document.getElementById('really-jebaited-modal');
+        const yesReallyJebaitedBtn = document.getElementById('yes-really-jebaited');
+        const noReallyJebaitedBtn = document.getElementById('no-really-jebaited');
+        const reallyJebaitedEmoji = document.getElementById('really-jebaited-emoji');
+
+        // Nastavení počáteční hlasitosti a levelu
+        let currentLevel = 1;
+        let currentVolume = 500;
+        let initialVolume = 500;
+        let incorrectAttemptCount = 0;
+        let maxIncorrectAttempts = 5;
+        let volumeIncrements = [];
+        let correctAnswersCount = 0;
+        
+        // Speciální otázka s nízkou šancí
+        const patAMatMusicQuestion = {
+            q: "Kdo je autorem hudby k seriálu 'Pat a Mat'?",
+            a: "Petr Skoumal",
+            options: ["Zdeněk Svěrák", "Jaroslav Uhlíř", "Miloš Macourek", "Jan Burian", "Vladimír Mišík"]
+        };
+
+        // Otázky rozdělené podle obtížnosti
+        const easyQuestions = [
+            { q: "Jak se jmenuje hlavní postava z filmu 'Sám doma'?", a: "Kevin McCallister", options: ["Harry", "Marv", "Macaulay Culkin", "John Hughes", "Buzz"] },
+            { q: "Jak se jmenuje hlavní hrdina ze série Harry Potter?", a: "Harry Potter", options: ["Ron Weasley", "Albus Brumbál", "Voldemort", "Severus Snape", "Dobby"] },
+            { q: "Jak se jmenuje fiktivní město, kde žijí Simpsonovi?", a: "Springfield", options: ["Shelbyville", "Quahog", "South Park", "Gotham", "Metropolis"] },
+            { q: "Jak se jmenuje hlavní postava z animovaného filmu Shrek?", a: "Shrek", options: ["Oslík", "Fiona", "Perníček", "Kočka v botách", "Lord Farquaad"] },
+            { q: "Která pohádka je známá pro svou postavu 'vílu Amálku'?", a: "Křemílek a Vochomůrka", options: ["Pojďte pane, budeme si hrát", "Maxipes Fík", "Krteček", "Bob a Bobek", "Rákosníček"] },
+            { q: "Kdo je král džungle v pohádce od Disneye?", a: "Lev Simba", options: ["Lev Alex", "Lev Mufasa", "Lev Scar", "lev Bílý", "lev Král"] },
+            { q: "Který superhrdina má za symbol pavouka?", a: "Spider-Man", options: ["Batman", "Superman", "Captain America", "Hulk", "Thor"] },
+            { q: "Která anglická písnička začíná slovem 'Hello, it's me...'?", a: "Hello od Adele", options: ["Hello od Lionela Richieho", "Hello od Beyoncé", "Hello od Rihanny", "Hello od Ed Sheerana", "Hello od Eda"] },
+            { q: "Jak se jmenuje postava z pohádky 'Ledové království', která si postaví sněhuláka Olafa?", a: "Elsa", options: ["Anna", "Kristoff", "Sven", "Olaf", "Hans"] },
+            { q: "Kdo hraje hlavní roli v komediálním seriálu 'Přátelé'?", a: "Jennifer Aniston", options: ["Courteney Cox", "Lisa Kudrow", "Matt LeBlanc", "Matthew Perry", "David Schwimmer"] },
+            { q: "Jak se jmenuje robotická postava ze seriálu 'Futurama'?", a: "Bender", options: ["Leela", "Fry", "Zoidberg", "Amy", "Nibbler"] },
+            { q: "Která postava z 'Toy Story' je kovboj?", a: "Woody", options: ["Buzz", "Rex", "Slinky", "Jessie", "Pan bramborová hlava"] },
+            { q: "Která postava z 'Toy Story' je kovboj?", a: "Woody", options: ["Buzz", "Rex", "Slinky", "Jessie", "Pan bramborová hlava"] },
+            { q: "Jak se jmenuje kočka ze seriálu 'Tom a Jerry'?", a: "Tom", options: ["Jerry", "Spike", "Butch", "Tyke", "Quacker"] },
+            { q: "Jak se jmenuje hlavní postava ze seriálu 'SpongeBob v kalhotách'?", a: "SpongeBob", options: ["Patrick", "Sépiák", "Sandy", "Pan Krabs", "Plankton"] },
+            { q: "Který seriál se odehrává v fiktivním městě Bikini Bottom?", a: "SpongeBob v kalhotách", options: ["Family Guy", "The Simpsons", "Futurama", "South Park", "Beavis a Butt-Head"] },
+            { q: "Která postava ze seriálu 'Hra o trůny' je král 'severu'?", a: "Jon Snow", options: ["Bran Stark", "Robb Stark", "Ned Stark", "Sansa Stark", "Arya Stark"] },
+            { q: "Jak se jmenuje hlavní postava z pohádky 'Na vlásku'?", a: "Locika", options: ["Flyn", "Maximus", "Pascal", "Matka Gothel", "Pascal"] }
+        ];
+
+        const mediumQuestions = [
+            { q: "Jak se jmenuje známý streamer, který je v Česku proslulý svou hláškou 'Ten pocit, kdy se probudíš…'?", a: "FattyPillow", options: ["Agraelus", "Herdyn", "SirYakari", "Kovy", "MenT"] },
+            { q: "Který český YouTuber je známý svými videi s politickou a společenskou satirou?", a: "Kovy", options: ["Jirka Král", "MenT", "FattyPillow", "Agraelus", "SirYakari"] },
+            { q: "Který song od The Weeknd se stal virálním hitem na TikToku v roce 2021?", a: "Blinding Lights", options: ["Save Your Tears", "Starboy", "In Your Eyes", "Take My Breath", "After Hours"] },
+            { q: "Jak se jmenuje fiktivní planeta, která je domovem postavy z filmu 'Star Wars', a kde se stalo 'zničení'?", a: "Alderaan", options: ["Tatooine", "Coruscant", "Endor", "Hoth", "Dagobah"] },
+            { q: "Jaký je název slavné počítačové hry, kde cílem je postavit vesmírnou loď z bloků?", a: "Minecraft", options: ["Roblox", "Fortnite", "Terraria", "Grand Theft Auto", "The Sims"] },
+            { q: "Který streamer je známý jako 'otec českého gamingu'?", a: "Agraelus", options: ["FattyPillow", "Herdyn", "SirYakari", "MenT", "Kovy"] },
+            { q: "Jaký je název pohádky o robotovi, který putuje po vesmíru?", a: "Wall-E", options: ["Roboti", "Astro Boy", "Terminátor", "Blade Runner", "Star Wars"] },
+            { q: "Jak se jmenuje postava ze seriálu 'Stranger Things', která má schopnost telekineze?", a: "Eleven", options: ["Mike Wheeler", "Dustin Henderson", "Will Byers", "Max Mayfield", "Steve Harrington"] },
+            { q: "Jak se jmenuje hlavní postava z filmu 'Pulp Fiction'?", a: "Vincent Vega", options: ["Jules Winnfield", "Mia Wallace", "Marsellus Wallace", "Butch Coolidge", "Wallace"] },
+            { q: "Jak se jmenuje postava z pohádky 'Malá mořská víla', která se obětovala pro lásku?", a: "Ariel", options: ["Ursula", "Flounder", "Sebastian", "Elias", "princ Erik"] },
+            { q: "Která je nejpopulárnější karetní hra na streamu Twitch?", a: "Hearthstone", options: ["Magic: The Gathering", "Gwent", "Legends of Runeterra", "Slay the Spire", "Faeria"] },
+            { q: "Jak se jmenuje postava z 'Matrixu', která má schopnost 'vyhnout se kulkám'?", a: "Neo", options: ["Trinity", "Morpheus", "Agent Smith", "Cypher", "The Oracle"] },
+            { q: "Který YouTuber je známý svými 'unboxings' a videi o technice?", a: "Mr. Beast", options: ["Linus Tech Tips", "Unbox Therapy", "Marques Brownlee (MKBHD)", "Mark Rober", "JayzTwoCents"] },
+            { q: "Který streamer je známý svou hláškou 'Hello, I'm a robot'?", a: "Ninja", options: ["Shroud", "Pokimane", "Tfue", "DrDisrespect", "Summit1g"] },
+            { q: "Jak se jmenuje postava ze seriálu 'Star Trek', která má za úkol cestovat do vesmíru a prozkoumat 'nové světy'?", a: "Kapitán Kirk", options: ["Spock", "Doktor McCoy", "Scotty", "Sulu", "Uhura"] },
+            { q: "Který rapper je známý svou hláškou 'Word up!'?", a: "Eminem", options: ["Dr. Dre", "Snoop Dogg", "Tupac Shakur", "Ice Cube", "Kendrick Lamar"] }
+        ];
+
+        const hardQuestions = [
+            { q: "Jak se jmenuje videohra, ve které musíte najít a zlikvidovat vetřelce, kteří vypadají jako klonové?", a: "Among Us", options: ["Fortnite", "Minecraft", "Roblox", "Grand Theft Auto", "Terraria"] },
+            { q: "Kdo nazpíval píseň 'Old Town Road', která spojuje country a hip-hop?", a: "Lil Nas X", options: ["Billy Ray Cyrus", "Travis Scott", "Post Malone", "Kanye West", "Drake"] },
+            { q: "Jak se jmenuje nejmladší držitel ceny Grammy za nejlepší album?", a: "Billie Eilish", options: ["Lorde", "Taylor Swift", "Adele", "Alicia Keys", "Dua Lipa"] },
+            { q: "Jaká je oblíbená hláška postavy 'Šebka' z filmu Pelíšky?", a: "Člověk se na to nemůže dívat!", options: ["Už tam budem?", "Hliník se odstěhoval do Humpolce.", "Hrajte, já vás vidím.", "To jsou paradoxy, co?", "To se nám to hodí."] },
+            { q: "Jaký je název nejdelší film na světě?", a: "Logistics", options: ["Tinker Bell", "Samsara", "The Clock", "Harry Potter a Relikvie smrti", "Pán prstenů: Návrat krále"] },
+            { q: "Který DJ je známý svou maskou ve tvaru marshmallow a hitem 'Alone'?", a: "Marshmello", options: ["Alan Walker", "David Guetta", "Calvin Harris", "Skrillex", "Martin Garrix"] },
+            { q: "Která písnička od Taylor Swift se často objevuje v tanečních challenge na TikToku?", a: "Shake It Off", options: ["Blank Space", "Lover", "Cardigan", "All Too Well", "Cruel Summer"] },
+            { q: "Jak se jmenuje hlavní postava z filmu 'Titanic'?", a: "Leonardo DiCaprio", options: ["Brad Pitt", "Johnny Depp", "Tom Cruise", "George Clooney", "Russell Crowe"] },
+            { q: "Kdo namluvil postavu 'Oslíka' v české verzi filmu 'Shrek'?", a: "Pavel Trávníček", options: ["Vladimír Brabec", "Martin Dejdar", "Jiří Lábus", "Dalibor Gondík", "Václav Postránecký"] },
+            { q: "Který programovací jazyk je známý pro svou hlášku 'Hello, World!'?", a: "C++", options: ["Python", "Java", "JavaScript", "C#", "Ruby"] },
+            { q: "Jak se jmenuje postava ze seriálu 'The Office', která má za úkol starat se o 'šéfa'?", a: "Dwight Schrute", options: ["Michael Scott", "Jim Halpert", "Pam Beesly", "Andy Bernard", "Angela Martin"] },
+            { q: "Který film je známý pro svou hlášku 'Hasta la vista, baby'?", a: "Terminátor 2: Den zúčtování", options: ["Terminátor", "Terminátor 3", "Terminátor Salvation", "Terminátor Genisys", "Terminátor: Temný osud"] },
+            { q: "Kdo namluvil postavu 'SpongeBoba' v české verzi seriálu?", a: "Vojtěch Dyk", options: ["Filip Blažek", "Jiří Dvořák", "Petr Rychlý", "Michal Novotný", "Michal Suchánek"] },
+            { q: "Jak se jmenuje postava z 'Minecraftu', která se snaží 'vykopat' diamant?", a: "Steve", options: ["Alex", "Herobrine", "Notch", "Jeb", "Villager"] }
+        ];
+
+        let remainingQuestions = [];
+        let currentQuestion = {};
+        
+        // Emojis, které budou padat
+        const happyEmojis = ['😊', '😂', '😄', '😀', '🥳', '😎'];
+        const sadEmojis = ['😢', '😭', '😠', '😡', '😵', '😱'];
+
+        // Fisher-Yates shuffle algorithm
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        // Funkce pro zobrazení/skrytí obrazovek
+        const showScreen = (screen) => {
+            const screens = [startScreen, difficultyScreen, gamePlay, endScreenYes, endScreenNo];
+            screens.forEach(s => s.classList.add('hidden'));
+            screen.classList.remove('hidden');
+        };
+
+        const showQuestion = () => {
+            incorrectAttemptCount = 0;
+            
+            // Šance na speciální otázku (5%)
+            if (Math.random() < 0.05) {
+                currentQuestion = patAMatMusicQuestion;
+            } else {
+                let questionsToUse = [];
+                if (currentLevel <= 3) {
+                    questionsToUse = easyQuestions;
+                } else if (currentLevel <= 6) {
+                    questionsToUse = mediumQuestions;
+                } else {
+                    questionsToUse = hardQuestions;
+                }
+                
+                if (remainingQuestions.length === 0) {
+                    remainingQuestions = shuffleArray([...questionsToUse]);
+                    resultMessage.textContent = "Všechny otázky jsi zodpověděl, začínáme od znova!";
+                }
+                currentQuestion = remainingQuestions.shift();
+            }
+            
+            questionText.textContent = currentQuestion.q;
+
+            // Získání pěti náhodných nesprávných odpovědí
+            const incorrectOptions = shuffleArray([...currentQuestion.options]).slice(0, 5);
+            
+            const allOptions = [...incorrectOptions, currentQuestion.a];
+            shuffleArray(allOptions);
+            
+            optionsContainer.innerHTML = '';
+            allOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option-button');
+                button.textContent = option;
+                optionsContainer.appendChild(button);
+            });
+
+            resultMessage.textContent = '';
+        };
+
+        // Funkce pro vytváření padajících emotikonů
+        const createFallingEmojis = (emojis) => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('span');
+                    emoji.classList.add('falling-emoji');
+                    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    emoji.style.left = Math.random() * 100 + 'vw';
+                    emoji.style.animationDuration = Math.random() * 5 + 5 + 's';
+                    body.appendChild(emoji);
+
+                    emoji.addEventListener('animationend', () => {
+                        emoji.remove();
+                    });
+                }, i * 200);
+            }
+        };
+
+        // Událost pro startovací tlačítko
+        startButton.addEventListener('click', () => {
+            showScreen(difficultyScreen);
+        });
+
+        // Události pro tlačítka obtížnosti
+        easyButton.addEventListener('click', () => {
+            currentVolume = 250;
+            initialVolume = 250;
+            volumeIncrements = [5, 10, 15, 20, 25];
+            gameSong.volume = Math.min(1.0, currentVolume / 100);
+            gameSong.play().catch(e => {
+                console.error("Problém se spuštěním zvuku:", e);
+            });
+            updateDisplay();
+            showScreen(gamePlay);
+            showQuestion();
+        });
+        
+        mediumButton.addEventListener('click', () => {
+            currentVolume = 500;
+            initialVolume = 500;
+            volumeIncrements = [25, 50, 75, 100, 125];
+            gameSong.volume = Math.min(1.0, currentVolume / 100);
+            gameSong.play().catch(e => {
+                console.error("Problém se spuštěním zvuku:", e);
+            });
+            updateDisplay();
+            showScreen(gamePlay);
+            showQuestion();
+        });
+        
+        hardButton.addEventListener('click', () => {
+            currentVolume = 750;
+            initialVolume = 750;
+            volumeIncrements = [10, 20, 30, 40, 50];
+            gameSong.volume = Math.min(1.0, currentVolume / 100);
+            gameSong.play().catch(e => {
+                console.error("Problém se spuštěním zvuku:", e);
+            });
+            updateDisplay();
+            showScreen(gamePlay);
+            showQuestion();
+        });
+        
+        // Událost pro tlačítko "Zvýšit hlasitost"
+        increaseVolumeBtn.addEventListener('click', () => {
+            currentVolume = Math.min(initialVolume, currentVolume + 100);
+            gameSong.volume = Math.min(1.0, currentVolume / 100);
+            updateDisplay();
+            resultMessage.textContent = "Hlasitost zvýšena.";
+        });
+
+        // Událost pro kontejner s odpověďmi (event delegation)
+        optionsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('option-button') && !e.target.disabled) {
+                const selectedAnswer = e.target.textContent;
+                
+                if (selectedAnswer === currentQuestion.a) {
+                    // Správná odpověď
+                    e.target.classList.add('correct-answer');
+                    resultMessage.textContent = "Správně! ✅ Hlasitost se snížila o 25%.";
+                    resultMessage.classList.remove('incorrect');
+                    resultMessage.classList.add('correct');
+                    currentVolume = Math.max(0, currentVolume - 25);
+                    correctAnswersCount++;
+                    
+                    body.classList.add('correct-answer-flash');
+                    setTimeout(() => body.classList.remove('correct-answer-flash'), 500);
+
+                    // Spustí veselé smajlíky
+                    createFallingEmojis(happyEmojis);
+
+                    const buttons = optionsContainer.querySelectorAll('.option-button');
+                    buttons.forEach(button => button.disabled = true);
+                    
+                    setTimeout(() => {
+                        updateDisplay();
+                        currentLevel++;
+                        levelDisplay.textContent = currentLevel;
+
+                        // Změněná logika: Zobrazí se, pokud máš 3 správné odpovědi, bez ohledu na špatné pokusy
+                        if (correctAnswersCount === 3) {
+                            jebaitedModal.style.display = 'block';
+                        } else if (correctAnswersCount === 9) {
+                            reallyJebaitedModal.style.display = 'block';
+                        } else if (currentVolume <= 0) {
+                            gameSong.pause();
+                            showScreen(endScreenYes);
+                        } else {
+                            showQuestion();
+                        }
+                    }, 1500);
+
+                } else {
+                    // Špatná odpověď
+                    const volumeIncrement = volumeIncrements[incorrectAttemptCount];
+                    incorrectAttemptCount++;
+                    e.target.classList.add('incorrect-answer');
+
+                    // Spustí smutné smajlíky
+                    createFallingEmojis(sadEmojis);
+                    
+                    if (incorrectAttemptCount <= maxIncorrectAttempts) {
+                        currentVolume += volumeIncrement;
+                        resultMessage.textContent = `Špatně! ❌ Hlasitost se zvýšila o ${volumeIncrement}%. Zbývá ${maxIncorrectAttempts - incorrectAttemptCount} pokus(ů).`;
+                    }
+                    
+                    if (incorrectAttemptCount >= maxIncorrectAttempts) {
+                        const buttons = optionsContainer.querySelectorAll('.option-button');
+                        buttons.forEach(button => button.disabled = true);
+                        resultMessage.textContent = `Už jsi odpověděl špatně ${maxIncorrectAttempts}x. Přesouváme se na další otázku.`;
+                        setTimeout(() => {
+                            showQuestion();
+                        }, 2000);
+                    }
+                }
+
+                gameSong.volume = Math.min(1.0, currentVolume / 100);
+
+                updateDisplay();
+            }
+        });
+
+        // Události pro tlačítka v modálním okně "Jsi napálen?"
+        yesJebaitedBtn.addEventListener('click', () => {
+            jebaitedModal.style.display = 'none';
+            jebaitedEmoji.classList.remove('hidden');
+            gamePlay.querySelector('h1').textContent = `😂😂😂 Level ${currentLevel} 😂😂😂`;
+            showQuestion();
+        });
+
+        noJebaitedBtn.addEventListener('click', () => {
+            gameSong.pause();
+            jebaitedModal.style.display = 'none';
+            showScreen(endScreenNo);
+        });
+
+        // Události pro tlačítka v modálním okně "Jsi vážně napálen?"
+        yesReallyJebaitedBtn.addEventListener('click', () => {
+            reallyJebaitedModal.style.display = 'none';
+            reallyJebaitedEmoji.classList.remove('hidden');
+            gamePlay.querySelector('h1').textContent = `😈😈😈 Level ${currentLevel} 😈😈😈`;
+            showQuestion();
+        });
+
+        noReallyJebaitedBtn.addEventListener('click', () => {
+            gameSong.pause();
+            reallyJebaitedModal.style.display = 'none';
+            showScreen(endScreenNo);
+        });
+
+        // Aktualizace zobrazení hlasitosti a levelu
+        const updateDisplay = () => {
+            volumeDisplay.textContent = currentVolume;
+        };
+    });
+</script>
+
+</body>
+</html>
